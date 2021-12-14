@@ -167,14 +167,14 @@ kubevirt-nightly-test:
 	./hack/kubevirt-nightly-test.sh
 
 dump-state:
-	./hack/dump-state.sh 
+	./hack/dump-state.sh
 
 bump-kubevirtci:
 	rm -rf _kubevirtci
 	./hack/bump-kubevirtci.sh
 
 generate-doc: build-docgen
-	_out/docgen ./pkg/apis/hco/v1beta1/hyperconverged_types.go > docs/api.md
+	_out/docgen ./api/v1beta1/hyperconverged_types.go > docs/api.md
 
 build-docgen:
 	go build -ldflags="-s -w" -o _out/docgen ./tools/docgen

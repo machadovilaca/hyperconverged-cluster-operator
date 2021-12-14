@@ -236,7 +236,7 @@ EOM
 # Write HCO CRDs
 (cd ${PROJECT_ROOT}/tools/csv-merger/ && go build)
 hco_crds=${TEMPDIR}/hco.crds.yaml
-(cd ${PROJECT_ROOT} && ${PROJECT_ROOT}/tools/csv-merger/csv-merger  --api-sources=${PROJECT_ROOT}/pkg/apis/... --output-mode=CRDs > $hco_crds)
+(cd ${PROJECT_ROOT} && ${PROJECT_ROOT}/tools/csv-merger/csv-merger  --api-sources=${PROJECT_ROOT}/api/... --output-mode=CRDs > $hco_crds)
 csplit --digits=2 --quiet --elide-empty-files \
   --prefix=hco \
   --suffix-format="%02d.${CRD_EXT}" \
@@ -275,7 +275,7 @@ done
 # Build and write deploy dir
 (cd ${PROJECT_ROOT}/tools/manifest-templator/ && go build)
 ${PROJECT_ROOT}/tools/manifest-templator/manifest-templator \
-  --api-sources=${PROJECT_ROOT}/pkg/apis/... \
+  --api-sources=${PROJECT_ROOT}/api/... \
   --cna-csv="$(<${cnaCsv})" \
   --virt-csv="$(<${virtCsv})" \
   --ssp-csv="$(<${sspCsv})" \

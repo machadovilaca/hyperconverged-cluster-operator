@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	hcov1beta1 "github.com/kubevirt/hyperconverged-cluster-operator/pkg/apis/hco/v1beta1"
+	"github.com/kubevirt/hyperconverged-cluster-operator/api/v1beta1"
 	"github.com/kubevirt/hyperconverged-cluster-operator/pkg/webhooks/mutator"
 	"github.com/kubevirt/hyperconverged-cluster-operator/pkg/webhooks/validator"
 
@@ -44,7 +44,7 @@ func SetupWebhookWithManager(ctx context.Context, mgr ctrl.Manager, isOpenshift 
 	}
 
 	whHandler := validator.NewWebhookHandler(logger, mgr.GetClient(), operatorNsEnv, isOpenshift)
-	hcov1beta1.SetValidatorWebhookHandler(whHandler)
+	v1beta1.SetValidatorWebhookHandler(whHandler)
 
 	nsMutator := mutator.NewNsMutator(mgr.GetClient(), operatorNsEnv)
 
@@ -62,7 +62,7 @@ func SetupWebhookWithManager(ctx context.Context, mgr ctrl.Manager, isOpenshift 
 		return err
 	}
 
-	bldr := ctrl.NewWebhookManagedBy(mgr).For(&hcov1beta1.HyperConverged{})
+	bldr := ctrl.NewWebhookManagedBy(mgr).For(&v1beta1.HyperConverged{})
 
 	srv := mgr.GetWebhookServer()
 	srv.CertDir = GetWebhookCertDir()

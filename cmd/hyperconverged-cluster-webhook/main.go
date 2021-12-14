@@ -18,8 +18,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
 	networkaddons "github.com/kubevirt/cluster-network-addons-operator/pkg/apis"
+	apis "github.com/kubevirt/hyperconverged-cluster-operator/api"
 	"github.com/kubevirt/hyperconverged-cluster-operator/cmd/cmdcommon"
-	"github.com/kubevirt/hyperconverged-cluster-operator/pkg/apis"
 	hcoutil "github.com/kubevirt/hyperconverged-cluster-operator/pkg/util"
 	"github.com/kubevirt/hyperconverged-cluster-operator/pkg/webhooks"
 	kubevirtcorev1 "kubevirt.io/api/core/v1"

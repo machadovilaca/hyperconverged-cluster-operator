@@ -22,7 +22,7 @@ KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION=v1 go test ./pkg/...
 ```
 It's possible to run the unit tests for a specific package, for example, the `operands` package, run:
 ```commandline
-KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION=v1 go test ./pkg/controller/operands/
+KUBEVIRT_CLIENT_GO_SCHEME_REGISTRATION_VERSION=v1 go test ./controllers/operands/
 ```
 This is also the way to run unit tests from an IDE. Then it is pretty simple to use the IDE debug tools.
 
