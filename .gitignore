@@ -6,3 +6,4 @@ _ci-configs/*
 _local/
 _kubevirtci/
 .vscode/
+bin
