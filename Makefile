@@ -205,6 +205,9 @@ deploy_cr:
 validate-no-offensive-lang:
 	./hack/validate-no-offensive-lang.sh
 
+generate:
+	./hack/generate.sh
+
 .PHONY: start \
 		clean \
 		build \

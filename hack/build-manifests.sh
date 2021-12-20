@@ -235,7 +235,7 @@ EOM
 
 # Write HCO CRDs
 (cd ${PROJECT_ROOT}/tools/csv-merger/ && go build)
-hco_crds=${TEMPDIR}/hco.crds.yaml
+hco_crds=${PROJECT_ROOT}/config/crd/bases/hco.kubevirt.io_hyperconvergeds.yaml
 (cd ${PROJECT_ROOT} && ${PROJECT_ROOT}/tools/csv-merger/csv-merger  --api-sources=${PROJECT_ROOT}/api/... --output-mode=CRDs > $hco_crds)
 csplit --digits=2 --quiet --elide-empty-files \
   --prefix=hco \

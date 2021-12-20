@@ -338,6 +338,7 @@ type HyperConvergedWorkloadUpdateStrategy struct {
 // +k8s:openapi-gen=true
 type HyperConvergedStatus struct {
 	// Conditions describes the state of the HyperConverged resource.
+	// +listType=map
 	// +patchMergeKey=type
 	// +patchStrategy=merge
 	// +optional
@@ -346,6 +347,7 @@ type HyperConvergedStatus struct {
 	// RelatedObjects is a list of objects created and maintained by this
 	// operator. Object references will be added to this list after they have
 	// been created AND found in the cluster.
+	// +listType=set
 	// +optional
 	RelatedObjects []corev1.ObjectReference `json:"relatedObjects,omitempty"`
 
