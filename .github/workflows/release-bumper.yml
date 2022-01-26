@@ -79,6 +79,7 @@ jobs:
         run: |
           echo "title: [${{ matrix.branches.branch }}] Bump ${{ env.UPDATED_COMPONENT }} to ${{ env.UPDATED_VERSION }}"
           echo "branch: bump_${{ env.UPDATED_COMPONENT }}_${{ env.UPDATED_VERSION }}_${{ matrix.branches.branch }}"
+          git diff --exit-code || echo
 
 #      - uses: peter-evans/create-pull-request@v3
 #        if: ${{ env.CHANGED }}
