@@ -16,6 +16,8 @@ const (
 	HCOMetricOverwrittenModifications = "overwrittenModifications"
 	HCOMetricUnsafeModifications      = "unsafeModifications"
 	HCOMetricHyperConvergedExists     = "HyperConvergedCRExists"
+	HCOMetricNodeMaxImages            = "nodeMaxImages"
+	HCOMetricNumberOfImages           = "nodeNumberOfImages"
 
 	HyperConvergedExists    = float64(1)
 	HyperConvergedNotExists = float64(0)
@@ -31,6 +33,25 @@ type metricDesc struct {
 
 func (md metricDesc) init() prometheus.Collector {
 	return md.initFunc(md)
+}
+
+var gaugeVecInitFunc = func(md metricDesc) prometheus.Collector {
+	return prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: md.fqName,
+			Help: md.help,
+		},
+		md.constLabelPairs,
+	)
+}
+
+var gaugeInitFunc = func(md metricDesc) prometheus.Collector {
+	return prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: md.fqName,
+			Help: md.help,
+		},
+	)
 }
 
 // HcoMetrics wrapper for all hco metrics
@@ -56,29 +77,28 @@ var HcoMetrics = func() hcoMetrics {
 			help:            "Count of unsafe modifications in the HyperConverged annotations",
 			mType:           "Gauge",
 			constLabelPairs: []string{counterLabelAnnName},
-			initFunc: func(md metricDesc) prometheus.Collector {
-				return prometheus.NewGaugeVec(
-					prometheus.GaugeOpts{
-						Name: md.fqName,
-						Help: md.help,
-					},
-					md.constLabelPairs,
-				)
-			},
+			initFunc:        gaugeVecInitFunc,
 		},
 		HCOMetricHyperConvergedExists: {
 			fqName:          "kubevirt_hco_hyperconverged_cr_exists",
 			help:            "Indicates whether the HyperConverged custom resource exists (1) or not (0)",
 			mType:           "Gauge",
 			constLabelPairs: []string{counterLabelAnnName},
-			initFunc: func(md metricDesc) prometheus.Collector {
-				return prometheus.NewGauge(
-					prometheus.GaugeOpts{
-						Name: md.fqName,
-						Help: md.help,
-					},
-				)
-			},
+			initFunc:        gaugeInitFunc,
+		},
+		HCOMetricNodeMaxImages: {
+			fqName:          "kubevirt_hco_node_max_images",
+			help:            "The maximum number of images that can be stored on a node",
+			mType:           "Gauge",
+			constLabelPairs: []string{"node"},
+			initFunc:        gaugeVecInitFunc,
+		},
+		HCOMetricNumberOfImages: {
+			fqName:          "kubevirt_hco_node_number_of_images",
+			help:            "The number of images that are stored on a node",
+			mType:           "Gauge",
+			constLabelPairs: []string{"node"},
+			initFunc:        gaugeVecInitFunc,
 		},
 	}
 
@@ -227,6 +247,14 @@ func (hm *hcoMetrics) IsHCOMetricHyperConvergedExists() (bool, error) {
 	}
 
 	return val == HyperConvergedExists, nil
+}
+
+func (hm *hcoMetrics) SetHCOMetricNodeMaxImages(nodeName string, count int) error {
+	return hm.SetMetric(HCOMetricNodeMaxImages, prometheus.Labels{"node": nodeName}, float64(count))
+}
+
+func (hm *hcoMetrics) SetHCOMetricNumberOfImages(nodeName string, count int) error {
+	return hm.SetMetric(HCOMetricNumberOfImages, prometheus.Labels{"node": nodeName}, float64(count))
 }
 
 func getLabelsForObj(kind string, name string) prometheus.Labels {

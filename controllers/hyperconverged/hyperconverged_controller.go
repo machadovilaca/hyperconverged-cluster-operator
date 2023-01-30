@@ -30,6 +30,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -109,6 +111,7 @@ func newReconciler(mgr manager.Manager, ci hcoutil.ClusterInfo, upgradeableCond 
 	}
 
 	r := &ReconcileHyperConverged{
+		config:               mgr.GetConfig(),
 		client:               mgr.GetClient(),
 		scheme:               mgr.GetScheme(),
 		operandHandler:       operands.NewOperandHandler(mgr.GetClient(), mgr.GetScheme(), ci, hcoutil.GetEventEmitter()),
@@ -252,6 +255,7 @@ var _ reconcile.Reconciler = &ReconcileHyperConverged{}
 type ReconcileHyperConverged struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
+	config               *rest.Config
 	client               client.Client
 	scheme               *runtime.Scheme
 	operandHandler       *operands.OperandHandler
@@ -270,6 +274,8 @@ type ReconcileHyperConverged struct {
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileHyperConverged) Reconcile(ctx context.Context, request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
+
+	r.updateNodeImageMetrics(logger)
 
 	resolvedRequest, hcoTriggered, err := r.resolveReconcileRequest(ctx, logger, request)
 	if err != nil {
@@ -1469,4 +1475,61 @@ func checkFinalizers(req *common.HcoRequest) bool {
 		return true
 	}
 	return false
+}
+
+type Kubeletconfig struct {
+	Kubeletconfig struct {
+		NodeStatusMaxImages int `json:"nodeStatusMaxImages"`
+	} `json:"kubeletconfig"`
+}
+
+func (r *ReconcileHyperConverged) updateNodeImageMetrics(logger logr.Logger) {
+	nodeList := corev1.NodeList{}
+	err := r.client.List(context.TODO(), &nodeList, &client.ListOptions{})
+	if err != nil {
+		logger.Error(err, "Failed to list nodes")
+		return
+	}
+
+	for _, node := range nodeList.Items {
+		logger.Info("Updating node image metrics", "node", node.Name, "images", len(node.Status.Images))
+		err = metrics.HcoMetrics.SetHCOMetricNumberOfImages(node.Name, len(node.Status.Images))
+		if err != nil {
+			logger.Error(err, "Failed to set number of images metric")
+			continue
+		}
+
+		r.setNodeMaxImagesMetrics(node.Name, logger)
+	}
+}
+
+func (r *ReconcileHyperConverged) setNodeMaxImagesMetrics(nodeName string, logger logr.Logger) {
+	k8sClient, err := kubernetes.NewForConfig(r.config)
+	if err != nil {
+		logger.Error(err, "Failed to create k8s client")
+		return
+	}
+
+	resp, err := k8sClient.CoreV1().RESTClient().Get().
+		Resource("nodes").Name(nodeName).
+		Suffix("proxy", "configz").
+		Do(context.TODO()).Raw()
+	if err != nil {
+		logger.Error(err, "Failed to get node configz")
+		return
+	}
+
+	var kc Kubeletconfig
+	err = json.Unmarshal(resp, &kc)
+	if err != nil {
+		logger.Error(err, "Failed to unmarshal kubelet configz")
+		return
+	}
+
+	logger.Info("Setting node max images metric", "node", nodeName, "maxImages", kc.Kubeletconfig.NodeStatusMaxImages)
+	err = metrics.HcoMetrics.SetHCOMetricNodeMaxImages(nodeName, kc.Kubeletconfig.NodeStatusMaxImages)
+	if err != nil {
+		logger.Error(err, "Failed to set node max images metric")
+		return
+	}
 }
