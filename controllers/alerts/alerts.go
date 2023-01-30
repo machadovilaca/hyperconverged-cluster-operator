@@ -10,11 +10,12 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/go-logr/logr"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/go-logr/logr"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 
 	hcoutil "github.com/kubevirt/hyperconverged-cluster-operator/pkg/util"
 )
@@ -24,6 +25,7 @@ const (
 	outOfBandUpdateAlert          = "KubevirtHyperconvergedClusterOperatorCRModification"
 	unsafeModificationAlert       = "KubevirtHyperconvergedClusterOperatorUSModification"
 	installationNotCompletedAlert = "KubevirtHyperconvergedClusterOperatorInstallationNotCompletedAlert"
+	imbalancedPodSchedulingAlert  = "KubeVirtHyperconvergedClusterOperatorPodSchedulingMightBeImbalanced"
 	severityAlertLabelKey         = "severity"
 	healthImpactAlertLabelKey     = "operator_health_impact"
 	partOfAlertLabelKey           = "kubernetes_operator_part_of"
@@ -116,6 +118,7 @@ func NewPrometheusRuleSpec() *monitoringv1.PrometheusRuleSpec {
 				createOutOfBandUpdateAlertRule(),
 				createUnsafeModificationAlertRule(),
 				createInstallationNotCompletedAlertRule(),
+				createPodSchedulingMightBeImbalancedAlertRule(),
 				createRequestCPUCoresRule(),
 			},
 		}},
@@ -171,6 +174,23 @@ func createInstallationNotCompletedAlertRule() monitoringv1.Rule {
 		Labels: map[string]string{
 			severityAlertLabelKey:     "info",
 			healthImpactAlertLabelKey: "critical",
+			partOfAlertLabelKey:       partOfAlertLabelValue,
+			componentAlertLabelKey:    componentAlertLabelValue,
+		},
+	}
+}
+
+func createPodSchedulingMightBeImbalancedAlertRule() monitoringv1.Rule {
+	return monitoringv1.Rule{
+		Alert: imbalancedPodSchedulingAlert,
+		Expr:  intstr.FromString("kubevirt_hco_node_max_images != -1 and kubevirt_hco_node_number_of_images >= kubevirt_hco_node_max_images"),
+		Annotations: map[string]string{
+			"summary": "Node {{ $labels.node }} contains the maximum allowed number of images, pod scheduling might be imbalanced across nodes.",
+		},
+		For: "5m",
+		Labels: map[string]string{
+			severityAlertLabelKey:     "warning",
+			healthImpactAlertLabelKey: "warning",
 			partOfAlertLabelKey:       partOfAlertLabelValue,
 			componentAlertLabelKey:    componentAlertLabelValue,
 		},
