@@ -7,8 +7,9 @@ import (
 )
 
 const (
+	UnsafeModificationAlert = "UnsupportedHCOModification"
+
 	outOfBandUpdateAlert          = "KubeVirtCRModified"
-	unsafeModificationAlert       = "UnsupportedHCOModification"
 	installationNotCompletedAlert = "HCOInstallationIncomplete"
 	singleStackIPv6Alert          = "SingleStackIPv6Unsupported"
 	MisconfiguredDeschedulerAlert = "HCOMisconfiguredDescheduler"
@@ -31,7 +32,7 @@ func operatorAlerts() []promv1.Rule {
 			},
 		},
 		{
-			Alert: unsafeModificationAlert,
+			Alert: UnsafeModificationAlert,
 			Expr:  intstr.FromString("sum by(annotation_name, namespace) ((kubevirt_hco_unsafe_modifications)>0)"),
 			Annotations: map[string]string{
 				"description": "unsafe modification for the {{ $labels.annotation_name }} annotation in the HyperConverged resource.",

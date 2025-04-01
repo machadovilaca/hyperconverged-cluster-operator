@@ -77,6 +77,10 @@ func GetOverwrittenModificationsCount(kind, name string) (float64, error) {
 	return value, nil
 }
 
+func GetUnsafeModifications() *operatormetrics.GaugeVec {
+	return unsafeModifications.Clone()
+}
+
 // SetUnsafeModificationCount sets the gauge to the required number
 func SetUnsafeModificationCount(count int, unsafeAnnotation string) {
 	unsafeModifications.WithLabelValues(getLabelsForUnsafeAnnotation(unsafeAnnotation)).Set(float64(count))

@@ -36,3 +36,7 @@ func (c *GaugeVec) GetBaseType() MetricType {
 func (c *GaugeVec) GetCollector() prometheus.Collector {
 	return c.GaugeVec
 }
+
+func (c *GaugeVec) Clone() *GaugeVec {
+	return NewGaugeVec(c.metricOpts, c.metricOpts.labels)
+}
